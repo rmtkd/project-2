@@ -8,7 +8,7 @@ from nltk.tokenize import word_tokenize
 from flask import Flask
 from flask import render_template, request
 from plotly.graph_objs import Bar
-import joblib
+from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
 import plotly.graph_objs as go
@@ -16,6 +16,15 @@ import plotly.graph_objs as go
 app = Flask(__name__)
 
 def tokenize(text):
+    """ 
+    Tokenize, lemmatizes and cleans the input text.
+    
+    Args:
+        text (string): inputted text to be cleaned
+    
+    Returns:
+        clean_tokens (list): array with cleaned text
+    """
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
 
@@ -40,7 +49,6 @@ model = joblib.load("../models/classifier.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     # Data for graph 1
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
@@ -66,7 +74,6 @@ def index():
       )
     
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
@@ -147,6 +154,9 @@ def go():
 
 
 def main():
+    """ 
+    Runs the web app.
+    """
     app.run(host='0.0.0.0', port=3000, debug=True)
 
 

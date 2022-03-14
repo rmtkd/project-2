@@ -26,14 +26,36 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import classification_report
 
 def load_data(database_filepath):
+    """ 
+    Loads all the data stored in SQL database, and returns X, y and categories names, which are 
+    used further on the supervised training
+    
+    Args:
+        database_filepath (string): name of processed data sql database
+    
+    Returns:
+        X (list): array with messages
+        y (list): array with binary of each category
+        category_names (list): list of category names
+    """
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     df = pd.read_sql("SELECT * FROM disaster_categories", engine)
     X = df.message.values
     y = df.iloc[:, 4:].values
-    return X, y, df.iloc[:, 4:].columns
+    category_names = df.iloc[:, 4:].columns
+    return X, y, category_names
 
 
 def tokenize(text):
+    """ 
+    Tokenize, lemmatizes and cleans the input text.
+    
+    Args:
+        text (string): inputted text to be cleaned
+    
+    Returns:
+        clean_tokens (list): array with cleaned text
+    """
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
     clean_tokens = []
@@ -46,6 +68,12 @@ def tokenize(text):
 
 
 def build_model():
+    """ 
+    ML pipeline with Grid Search for parameters tunning.
+    
+    Returns:
+        cv (model): Grid Search with text processing machine learning pipeline
+    """
     pipeline = Pipeline([
         ('features', FeatureUnion([
             ('text_pipeline', Pipeline([
@@ -67,17 +95,36 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    Y_pred = model.predict(X_test)
-    accuracy = (Y_pred == Y_test).mean()
+    """ 
+    Prints the f1 score, precision and recall for the test set.
     
-    return accuracy
+    Args:
+        model (model): name of messages dataset
+        X_test (list): list with test values
+        Y_test (list): list with test values
+        category_names (list): categories names
+    """
+    y_pred = model.predict(X_test)
+    accuracy = (y_pred == Y_test).mean()
+    for i in range(len(category_names)):
+        print(category_names[i], classification_report([row[i] for row in y_test], [row[i] for row in y_pred]))
 
 
 def save_model(model, model_filepath):
+    """ 
+    Saves model to pickle file.
+    
+    Args:
+        model (model): ML model
+        model_filepath (string): name of output pickle file
+    """
     pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
+    """ 
+    Runs the ML pipeline
+    """
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
